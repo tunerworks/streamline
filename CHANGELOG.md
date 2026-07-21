@@ -5,6 +5,15 @@ All notable changes to Streamline are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-07-21
+
+### Added
+- Backup reminders — a gentle prompt to back up when you open or return to the app after making changes, capped to once per day so it never nags. A red dot on the Settings gear shows whenever you have un-backed-up changes.
+
+### Changed
+- Made the backup indicator dot red and larger with a subtle pulse so it's easier to notice (respects reduced-motion settings).
+- Made the tag field's example text generic, so nothing personal ships with the app when shared outside the household.
+
 ## [1.0.0] — 2026-07-21
 
 First complete release for the family.
