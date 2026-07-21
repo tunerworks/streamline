@@ -12,6 +12,7 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Made the backup indicator dot red and larger with a subtle pulse so it's easier to notice (respects reduced-motion settings).
+- The backup indicator dot now also appears on the "Save backup file" button in Settings, not just the gear icon.
 - Made the tag field's example text generic, so nothing personal ships with the app when shared outside the household.
 
 ## [1.0.0] — 2026-07-21

@@ -42,6 +42,7 @@
   .header-btns { display: flex; gap: 9px; }
   .round-btn { width: 44px; height: 44px; border-radius: 13px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .12s, background .12s; position: relative; }
   .btn-dot { position:absolute; top:5px; right:5px; width:12px; height:12px; border-radius:50%; background:#F0453E; border:2px solid var(--panel2); box-shadow:0 0 0 0 rgba(240,69,62,0.6); animation:dotpulse 1.8s ease-out infinite; }
+  .btn-dot-dark { border-color:#14161C; top:8px; right:8px; }
   @keyframes dotpulse { 0%{ box-shadow:0 0 0 0 rgba(240,69,62,0.55);} 70%{ box-shadow:0 0 0 7px rgba(240,69,62,0);} 100%{ box-shadow:0 0 0 0 rgba(240,69,62,0);} }
   @media (prefers-reduced-motion: reduce){ .btn-dot{ animation:none; } }
   .round-btn:active { transform: scale(.92); background: #1f2532; }
@@ -3092,7 +3093,7 @@ function settingsSheet(){
     el("div",{style:"height:24px"}),
     el("div",{class:"field-label"},["Backup & restore"]),
     el("p",{class:"sheet-p",style:"margin-bottom:12px"},["Save a backup file to iCloud, Drive, or email it to yourself. On a new phone, install the app and load the file to bring everything back \u2014 shows, tags, and household."]),
-    el("button",{class:"primary-btn",onClick:exportBackup},["Save backup file"]),
+    el("button",{class:"primary-btn",style:"position:relative",onClick:exportBackup},[ "Save backup file", state.pending>0 ? el("span",{class:"btn-dot btn-dot-dark"}) : null ]),
     el("button",{class:"ghost-btn",onClick:function(){ fileInput.click(); }},["Restore from a backup file"]),
     fileInput,
     el("div",{style:"height:24px"}),
