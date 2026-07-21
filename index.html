@@ -173,6 +173,14 @@
   .ghost-btn { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; color: #C7CDDA; font-weight: 600; font-size: 14px; padding: 13px; cursor: pointer; margin-top: 10px; }
   .ghost-btn:active { background: #1f2532; }
   .danger-btn { color:#E5817F; border-color: rgba(229,72,77,0.3); }
+  .ack-row { display:flex; align-items:center; gap:11px; padding:12px; margin-bottom:14px; background:var(--ink); border:1px solid var(--line); border-radius:11px; cursor:pointer; }
+  .ack-box { flex:0 0 auto; width:22px; height:22px; border-radius:6px; border:2px solid var(--dim); display:flex; align-items:center; justify-content:center; color:#14161C; }
+  .ack-box.on { background:#F0453E; border-color:#F0453E; }
+  .ack-box svg { display:block; }
+  .ack-label { font-size:13px; color:var(--muted); line-height:1.4; }
+  .danger-solid { width:100%; background:#F0453E; border:none; border-radius:12px; color:#fff; font-weight:700; font-size:15px; padding:15px; cursor:pointer; margin-bottom:10px; transition:filter .12s, transform .1s; }
+  .danger-solid:active { filter:brightness(1.08); transform:scale(.99); }
+  .danger-solid.disabled { background:#3a2427; color:#7a5b5e; cursor:not-allowed; }
   .sheet-p { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0 0 16px; }
   .tabs { display: flex; gap: 8px; margin-bottom: 18px; background: var(--ink); padding: 4px; border-radius: 12px; }
   .tab { flex: 1; padding: 10px; border-radius: 9px; border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
@@ -2525,7 +2533,7 @@ var state = {
   sheet: null, editingId: null, syncTab: "send",
   doneOpen: false, search: "",
   form: { title:"", platform:"Netflix", status:STATUS.QUEUE, tags:[] },
-  newMember: "", pasteVal: "", newTag: "", activeTags: [], newList: "", renamingId: null, renameVal: "",
+  newMember: "", pasteVal: "", newTag: "", activeTags: [], newList: "", renamingId: null, renameVal: "", resetAck: false,
 };
 
 /* ---------- storage ---------- */
@@ -2834,6 +2842,7 @@ function render(){
   if(state.sheet==="settings") root.appendChild(settingsSheet());
   if(state.sheet==="lists") root.appendChild(listsSheet());
   if(state.sheet==="backup") root.appendChild(backupReminderSheet());
+  if(state.sheet==="reset") root.appendChild(resetSheet());
 }
 function sectionHead(t,c){ return el("div",{class:"section-head"},[ el("span",{class:"section-title"},[t]), el("span",{class:"section-count"},[String(c)]) ]); }
 
@@ -2962,6 +2971,37 @@ function syncSheet(){
 
 /* ---------- settings sheet ---------- */
 /* ---------- backup & restore ---------- */
+function resetAll(){
+  try{
+    [K_LISTS,K_CURRENT,K_SHOWS,K_WHO,K_MEMBERS,K_PENDING,K_BACKUP_AT,K_REMIND_AT].forEach(function(k){ localStorage.removeItem(k); });
+    localStorage.removeItem(OLD_KEYS.shows); localStorage.removeItem(OLD_KEYS.who); localStorage.removeItem(OLD_KEYS.members);
+  }catch(e){}
+  state.members=null; state.who=null; state.lists=[]; state.currentListId=null; state.shows=[];
+  state.pending=0; state.backupAt=0; state.activeTags=[]; state.search=""; state.doneOpen=false;
+  state.sheet=null; state.resetAck=false; state.renamingId=null;
+  load();      // rebuilds a fresh empty default and lands on first-run setup
+  render();
+  toast("Everything reset");
+}
+function resetSheet(){
+  var overlay=el("div",{class:"overlay",onClick:function(e){ if(e.target===overlay){ state.sheet=null; state.resetAck=false; render(); } }});
+  var ack=el("div",{class:"ack-row",onClick:function(){ state.resetAck=!state.resetAck; render(); }},[
+    el("span",{class:"ack-box"+(state.resetAck?" on":""),html: state.resetAck?ICO.check:""}),
+    el("span",{class:"ack-label"},["I understand this erases everything on this device"]) ]);
+  var resetBtn=el("button",{class:"danger-solid"+(state.resetAck?"":" disabled"),onClick:function(){
+    if(!state.resetAck) return;
+    if(confirm("Last check \u2014 erase all lists, shows, and household on this device? This cannot be undone.")) resetAll();
+  }},["Reset everything"]);
+  var sheet=el("div",{class:"sheet"},[ el("div",{class:"grabber"}),
+    el("div",{class:"sheet-head"},[ el("span",{class:"eyebrow",style:"color:#F0453E"},["Reset everything"]), el("button",{class:"icon-btn",onClick:function(){ state.sheet=null; state.resetAck=false; render(); },html:ICO.x}) ]),
+    el("p",{class:"sheet-p"},["This permanently erases all lists, shows, tags, progress, and household names on this device, and returns the app to first-run setup. It can't be undone. Other people's copies aren't affected."]),
+    el("button",{class:"ghost-btn",style:"margin:0 0 16px",onClick:function(){ exportBackup(); }},["Save a backup first"]),
+    ack,
+    resetBtn,
+    el("button",{class:"ghost-btn",onClick:function(){ state.sheet=null; state.resetAck=false; render(); }},["Cancel"]) ]);
+  overlay.appendChild(sheet); return overlay;
+}
+
 function backupReminderSheet(){
   var overlay=el("div",{class:"overlay",onClick:function(e){ if(e.target===overlay){ state.sheet=null; render(); } }});
   var days = state.backupAt ? Math.floor(daysSinceBackup()) : null;
@@ -3098,7 +3138,8 @@ function settingsSheet(){
     fileInput,
     el("div",{style:"height:24px"}),
     el("div",{class:"field-label"},["Danger zone"]),
-    el("button",{class:"ghost-btn danger-btn",onClick:function(){ if(confirm("Clear all shows in \u201c"+cur().name+"\u201d? This can't be undone.")){ state.shows=[]; saveShows(); state.sheet=null; render(); toast("List cleared"); } }},["Clear shows in this list"]) ]);
+    el("button",{class:"ghost-btn danger-btn",onClick:function(){ if(confirm("Clear all shows in \u201c"+cur().name+"\u201d? This can't be undone.")){ state.shows=[]; saveShows(); state.sheet=null; render(); toast("List cleared"); } }},["Clear shows in this list"]),
+    el("button",{class:"ghost-btn danger-btn",style:"margin-top:10px",onClick:function(){ state.resetAck=false; state.sheet="reset"; render(); }},["Reset everything\u2026"]) ]);
   overlay.appendChild(sheet); return overlay;
 }
 

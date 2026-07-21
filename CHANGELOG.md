@@ -5,6 +5,11 @@ All notable changes to Streamline are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project uses [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-07-21
+
+### Added
+- Reset everything — a Danger-zone option to erase all lists, shows, tags, and household and start from scratch. Guarded by an acknowledgment checkbox plus a final confirmation, with a one-tap option to save a backup first.
+
 ## [1.1.0] — 2026-07-21
 
 ### Added
